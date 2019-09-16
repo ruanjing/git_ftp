@@ -1,0 +1,129 @@
+<html>
+    <head>
+        <title>git上传工具</title>
+    </head>
+    <body>
+        <table>
+            <caption>项目</caption>
+        <thead>
+            <tr>
+                <th>项目名称</th>
+                <th>项目地址</th>
+                <th>开始commit</th>
+                <th>结束commit</th>
+                <th>ftp地址</th>
+                <th>ftp账号</th>
+                <th>ftp密码</th>
+                <th>路径</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+
+    </table>
+    <a href="javascript:create_row();">新增</a>
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+        <script>
+            // 使用node.js获取系统信息
+        var path = require("path");
+        var your_menu = new nw.Menu({ type: 'menubar' });
+        your_menu.append(new nw.MenuItem({ label: '开启服务',click:function(){
+            // F:/nwjs/php/
+            var url = path.dirname(process.execPath).replace("/\//","//");
+            nw.Shell.openItem(url+"/php/start.bat");
+            alert("开启服务");
+        }}));
+        your_menu.append(new nw.MenuItem({ label: '关闭服务',click:function(){
+            var url = path.dirname(process.execPath).replace("/\//","//");
+            nw.Shell.openItem(url+"/php/end.bat");
+            alert("关闭服务");
+        }}));
+        nw.Window.get().menu = your_menu;
+        var db = openDatabase("project", "1.0", "project", 1024 * 100);
+        db.transaction(function(tx) {
+        tx.executeSql("CREATE TABLE IF NOT EXISTS setting(mc TEXT,dz TEXT,ks TEXT,js TEXT,host TEXT,user TEXT,pwd TEXT,path TEXT)")
+        //在表中插入一条数据
+        // tx.executeSql("INSERT INTO message VALUES(?,?,?)", ["zhong", "web sql database", 2017]);
+        });
+        db.transaction(function(tx) {
+    tx.executeSql("SELECT rowid,* FROM setting", [], function(tx, rs) {
+           //执行成功回调函数，返回执行结果  rs ,我们将 rs 循环
+           var html="";
+            for (var i = 0; i < rs.rows.length; i++) {
+               //打印出查询的结果
+                html+="<tr><td><input value='"+rs.rows.item(i).mc+"' class='mc'/></td><td><input value='"+rs.rows.item(i).dz+"' class='dz'/></td><td><input value='"+rs.rows.item(i).ks+"' class='ks'/></td><td><input value='"+rs.rows.item(i).js+"' class='js'/></td><td><input value='"+rs.rows.item(i).host+"' class='host'/></td><td><input value='"+rs.rows.item(i).user+"' class='user'/></td><td><input value='"+rs.rows.item(i).pwd+"' class='pwd'  type='password' /></td><td><input value='"+rs.rows.item(i).path+"' class='path'/><input  type='hidden' name='row_id' value='"+rs.rows.item(i).rowid+"'/></td><td><a href='javascript:;' class='save'>保存</a>|<a href='javascript:;' class='del'>删除</a>|<a href='javascript:;' class='zip'>压缩</a>|<a href='javascript:;' class='upload'>上传</a></td></tr>";
+            }
+            document.getElementsByTagName("tbody")[0].innerHTML=html+document.getElementsByTagName("tbody")[0].innerHTML;
+        },
+        function(eror) {})
+})
+$(document).on('click','.save',function(){
+    var mc=$(this).parents("tr").find(".mc").val();
+        var dz=$(this).parents("tr").find(".dz").val();
+        var ks=$(this).parents("tr").find(".ks").val();
+        var js=$(this).parents("tr").find(".js").val();
+        var host=$(this).parents("tr").find(".host").val();
+        var user=$(this).parents("tr").find(".user").val();
+        var pwd=$(this).parents("tr").find(".pwd").val();
+        var path=$(this).parents("tr").find(".path").val();
+        var row_id=$(this).parents("tr").find("[name='row_id']").val();
+        if(row_id>0){
+            db.transaction(function(tx) {
+                var sql='update setting set mc="'+mc+'" ,dz="'+dz+'" ,ks="'+ks+'" ,js="'+js+'" ,host="'+host+'" ,user="'+user+'" ,pwd="'+pwd+'" ,path="'+path+'" where rowid='+row_id;
+            tx.executeSql(sql, []);
+        });
+        }else{
+            db.transaction(function(tx) {
+            tx.executeSql("INSERT INTO setting VALUES(?,?,?,?,?,?,?,?)", [mc,dz,ks,js,host,user,pwd,path]);
+        });
+        }
+
+});
+$(document).on('click','.del',function(){
+    var row_id=$(this).parents("tr").find("[name='row_id']").val();
+        db.transaction(function(tx) {
+            tx.executeSql("delete from setting where rowid="+row_id,[]);
+        });
+        location.reload();
+});
+$(document).on('click','.upload',function(){
+    var mc=$(this).parents("tr").find(".mc").val();
+    var dz=$(this).parents("tr").find(".dz").val();
+    var ks=$(this).parents("tr").find(".ks").val();
+    var js=$(this).parents("tr").find(".js").val();
+    var host=$(this).parents("tr").find(".host").val();
+    var user=$(this).parents("tr").find(".user").val();
+    var pwd=$(this).parents("tr").find(".pwd").val();
+    var path=$(this).parents("tr").find(".path").val();
+    $.ajax({
+        "url":"http://localhost:8000/index.php",
+        'type':"POST",
+        'data':{'mc':mc,'dz':dz,'ks':ks,'js':js,'host':host,'user':user,'pwd':pwd,'path':path},
+        'success':function(json){
+            alert(json);
+            // location.href="/"+mc+".zip";
+        }
+    });
+});
+$(document).on('click','.zip',function(){
+    var mc=$(this).parents("tr").find(".mc").val();
+    var dz=$(this).parents("tr").find(".dz").val();
+    var ks=$(this).parents("tr").find(".ks").val();
+    var js=$(this).parents("tr").find(".js").val();
+    $.ajax({
+        "url":"http://localhost:8000/index.php",
+        'type':"POST",
+        'data':{'mc':mc,'dz':dz,'ks':ks,'js':js},
+        'success':function(json){
+            location.href="http://localhost:8000/"+mc+".zip";
+        }
+    });
+});
+function create_row(){
+    var html="<tr><td><input value='' class='mc'/></td><td><input value='' class='dz'/></td><td><input value='' class='ks'/></td><td><input value='' class='js'/></td><td><input value='' class='host'/></td><td><input value='' class='user'/></td><td><input value='' type='password' class='pwd'/></td><td><input value='' class='path'/></td><td><a href='javascript:;' class='save'>保存</a>|<a href='javascript:;' class='del'>删除</a>|<a href='javascript:;' class='zip'>压缩</a>|<a href='javascript:;' class='upload'>上传</a></td></tr>";
+    $("tbody").append(html);
+}
+        </script>
+    </body>
+</html>

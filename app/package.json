@@ -1,0 +1,23 @@
+{
+    "name": "helloworld1",
+    "main": "index.html",
+    "description": "demo app of node-webkit",
+    "version": "0.1.0",
+    "keywords": [ "demo", "node-webkit" ],
+    "window": {
+        "title": "node-webkit demo",
+        "icon": "link.png",
+        "toolbar": true,
+        "frame": true,
+        "width": 1600,
+        "height": 800,
+        "position": "mouse",
+        "min_width": 400,
+        "min_height": 200,
+        "max_width": 1600,
+        "max_height": 800
+    },
+    "webkit": {
+       "plugin": true
+    }
+  }
